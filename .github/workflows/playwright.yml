@@ -1,9 +1,9 @@
 name: Tests with Allure Report
 on:
   push:
-    branches: [ dev ]
+    branches: [ main ]
   pull_request:
-    branches: [ dev ]
+    branches: [ main ]
 
 permissions:
   contents: write # Grants write permission for all jobs in the workflow
