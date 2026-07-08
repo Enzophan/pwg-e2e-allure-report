@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npx playwright test",
+    "test": "npx cucumber-js -p test_runner",
     "test:chrome": "npx playwright test --project=chromium --headed",
     "report:custom": "node scripts/generate-report.js"
   },
