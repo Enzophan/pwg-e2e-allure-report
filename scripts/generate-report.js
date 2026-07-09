@@ -5,7 +5,7 @@ const fs   = require('fs');
 const path = require('path');
 
 const REPORT_INPUT  = path.resolve(__dirname, '../test-results/test-results.json');
-const REPORT_OUTPUT = path.resolve(__dirname, '../reports/playwright-report.html');
+const REPORT_OUTPUT = path.resolve(__dirname, '../reports/index.html');
 const HISTORY_FILE  = path.resolve(__dirname, '../reports/pass-rate-history.json');
 const MAX_HISTORY   = 30;
 
