@@ -1,0 +1,112 @@
+name: Tests with Custom Report
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: write # Grants write permission for all jobs in the workflow
+
+jobs:
+  testing:
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Set up cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          key: cache/${{github.repository}}/${{github.ref}}
+          restore-keys: cache/${{github.repository}}/refs/heads/master
+          path: .test/**
+
+      - name: Run Playwright tests
+        continue-on-error: true
+        run: npx playwright test
+
+      - name: Fetch history.json from target branch
+        continue-on-error: true
+        run: |
+          TARGET_BRANCH="history-data"
+          FILE_PATH="pass-rate-history.json"
+
+          git fetch origin $TARGET_BRANCH:$TARGET_BRANCH || echo "$TARGET_BRANCH branch not found, will create new history"
+
+          # Extract the file directly from the other branch and save it locally
+          git show origin/$TARGET_BRANCH:$FILE_PATH > reports/pass-rate-history.json || echo "File not found in $TARGET_BRANCH, starting fresh."
+
+          # Proof of concept: Print the contents to the console
+          echo "Contents of pass-rate-history.json from $TARGET_BRANCH:"
+          cat reports/pass-rate-history.json
+
+      - name: Run generate custom report
+        run: npm run report
+
+      - name: Copy File and Push
+        run: |
+          # 1. Configure git bot identity
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "no-reply@github.com"
+
+          # 2. Move the file to safety
+          cp reports/pass-rate-history.json /tmp/pass-rate-history.json
+
+          # 3. Switch to or create the target branch
+          TARGET_BRANCH="history-data"
+          git checkout $TARGET_BRANCH || git checkout -b $TARGET_BRANCH
+
+          # 4. Bring the file back
+          cp /tmp/pass-rate-history.json pass-rate-history.json
+
+          # 5. Force add the file to bypass any .gitignore rules
+          git add -f pass-rate-history.json
+
+          # 6. Commit and push
+          git commit -m "chore: update pass-rate-history.json [skip ci]" || echo "No changes to commit"
+          git push origin $TARGET_BRANCH
+
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: custom-reports
+          path: reports/
+          retention-days: 5
+          overwrite: true
+
+  Generate-Report:
+    name: Generate Report
+    needs: testing
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: custom-reports
+          path: ./reports
+
+      - name: Deploy Report Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GTOKEN }}
+          publish_dir: ./reports
