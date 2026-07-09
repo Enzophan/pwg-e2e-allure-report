@@ -16,3 +16,16 @@ test("verify description of dev.to", async ({ page }) => {
     .getAttribute("content");
   expect(description).toBeTruthy();
 });
+
+test("verify DEV Challenges of dev.to", async ({ page }) => {
+  await page.goto("https://dev.to");
+
+  // Expect a description meta tag to have content.
+  await page
+    .locator(".side-bar > nav > ul.default-navigation-links > li")
+    .getByText("DEV Challenges")
+    .click();
+
+  await expect(page.locator("section > h1")).toHaveText("Join a DEV Online Hackathon or Writing Challenge");
+  expect(page.url()).toBe("https://dev.to/challenges");
+});
