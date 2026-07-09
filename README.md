@@ -20,3 +20,4 @@
 - In spec:
     import * as allure from "allure-js-commons";
     await allure.severity("critical");
+# test-e2e

@@ -9,6 +9,14 @@ const REPORT_OUTPUT = path.resolve(__dirname, '../reports/playwright-report.html
 const HISTORY_FILE  = path.resolve(__dirname, '../reports/pass-rate-history.json');
 const MAX_HISTORY   = 30;
 
+
+// Ensure the reports output directory exists
+const REPORTS_DIR = path.dirname(REPORT_OUTPUT);
+if (!fs.existsSync(REPORTS_DIR)) {
+  fs.mkdirSync(REPORTS_DIR, { recursive: true });
+}
+
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function escapeHtml(str) {
